@@ -1,0 +1,62 @@
+name: APK Derle
+
+# Bu workflow, kodu GitHub'a her push ettiğinizde (veya elle çalıştırdığınızda)
+# otomatik olarak "Baş Zincir - Satış" APK dosyasını derler.
+# Derlenen APK, çalışan iş bittikten sonra "Actions" sekmesinden indirilebilir.
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu indir
+        uses: actions/checkout@v4
+
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # GitHub'ın "ubuntu-latest" sanal makinesinde Android SDK zaten hazır
+      # kurulu gelir. Daha önce burada kullanılan "android-actions/setup-android"
+      # eklentisi, Google'ın SDK deposundan kaldırdığı eski bir "tools"
+      # paketini kurmaya çalışıp hata verdiği için tamamen kaldırıldı. Bunun
+      # yerine, makinede zaten bulunan SDK aracını kullanarak sadece gerçekten
+      # ihtiyaç duyduğumuz bileşenlerin (varsa) kurulu olduğundan emin oluyoruz.
+      - name: Android SDK bileşenlerini doğrula
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null
+
+      # Firebase yapılandırma dosyasını (google-services.json) GitHub Secrets'tan
+      # base64 çözerek app/ klasörüne yazar. Bu dosyayı repoya asla commit etmeyin.
+      # Kurulum talimatları için README.md dosyasına bakın.
+      - name: google-services.json oluştur
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "HATA: GOOGLE_SERVICES_JSON_BASE64 secret'ı tanımlı değil."
+            echo "README.md dosyasındaki 'Firebase Kurulumu' adımlarını uygulayın."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > app/google-services.json
+
+      - name: Gradle kur
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Debug APK derle
+        run: gradle assembleDebug --no-daemon
+
+      - name: APK'yı yükle (indirilebilir çıktı)
+        uses: actions/upload-artifact@v4
+        with:
+          name: bas-zincir-satis-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
