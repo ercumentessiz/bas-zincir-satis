@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.BasZincirSatis" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

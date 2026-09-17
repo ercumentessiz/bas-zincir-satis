@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "27360074187",
+    "project_id": "bas-zincir-satis",
+    "storage_bucket": "bas-zincir-satis.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27360074187:android:b092b2c52873ad03adfe4e",
+        "android_client_info": {
+          "package_name": "com.baszincir.satis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdHsBzS0q8deY_Ml7bSOSV-O0NCp1TslI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
